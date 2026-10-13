@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>KANO LIFE — Umar Abubakar Faruk</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101820;color:white;font-family:Arial,sans-serif;overflow:hidden}
+#game{display:block;width:100vw;height:100vh;touch-action:none}
+#top{
+position:fixed;top:8px;left:8px;right:8px;z-index:2;
+display:flex;justify-content:space-between;align-items:flex-start;gap:6px;
+pointer-events:none
+}
+.panel{background:#14251feF;border:1px solid #5b8b65;border-radius:12px;padding:9px 11px;box-shadow:0 3px 10px #0007}
+.brand{font-weight:900;color:#8cf0a1;font-size:16px}
+.small{font-size:11px;color:#d4e7d8;margin-top:4px}
+#money{font-weight:bold;color:#ffe17c;font-size:15px}
+#notice{
+position:fixed;top:100px;left:50%;transform:translateX(-50%);
+background:#13231ff2;border:1px solid #8cf0a1;border-radius:12px;
+padding:10px 14px;z-index:5;display:none;text-align:center;
+max-width:90%;font-size:13px
+}
+#controls{
+position:fixed;bottom:16px;left:14px;z-index:3;
+display:grid;grid-template-columns:48px 48px 48px;grid-template-rows:48px 48px 48px;gap:4px
+}
+.ctrl{
+border:1px solid #ffffff66;border-radius:12px;background:#152b25dd;
+color:white;font-size:22px;font-weight:bold;touch-action:none
+}
+.up{grid-column:2;grid-row:1}.left{grid-column:1;grid-row:2}
+.down{grid-column:2;grid-row:2}.right{grid-column:3;grid-row:2}
+#actions{
+position:fixed;right:12px;bottom:20px;z-index:3;
+display:flex;flex-direction:column;gap:8px;width:116px
+}
+.action{
+border:1px solid #8cf0a1;border-radius:12px;padding:12px 7px;
+background:#19372c;color:white;font-weight:bold;font-size:12px
+}
+#help{
+position:fixed;bottom:5px;left:180px;right:140px;text-align:center;
+font-size:10px;color:#d4e7d8;pointer-events:none
+}
+#modal{
+display:none;position:fixed;inset:0;z-index:10;background:#000b;
+align-items:center;justify-content:center;padding:18px
+}
+#box{
+width:min(380px,100%);background:#172820;border:1px solid #8cf0a1;
+border-radius:18px;padding:20px;max-height:80vh;overflow:auto
+}
+#box h2{margin-top:0;color:#8cf0a1}
+.option{
+display:block;width:100%;text-align:left;margin:9px 0;padding:13px;
+border-radius:10px;border:1px solid #50795b;background:#203b2d;color:white;font-size:14px
+}
+.close{background:#744039;border:0}
+@media(min-width:800px){
+#controls{transform:scale(1.1);transform-origin:bottom left}
+#actions{width:150px}
+.action{font-size:14px}
+}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="top">
+  <div class="panel">
+    <div class="brand">🌆 KANO LIFE</div>
+    <div class="small">Your city. Your story.</div>
+    <div class="small" id="location">Kano City</div>
+  </div>
+  <div class="panel">
+    <div id="money">₦1,000,000</div>
+    <div class="small" id="stats">Energy: 100 | Level: 1</div>
+  </div>
+</div>
+
+<div id="notice"></div>
+
+<div id="controls">
+  <button class="ctrl up" data-dir="up">▲</button>
+  <button class="ctrl left" data-dir="left">◀</button>
+  <button class="ctrl down" data-dir="down">▼</button>
+  <button class="ctrl right" data-dir="right">▶</button>
+</div>
+
+<div id="actions">
+  <button class="action" id="interact">📍 INTERACT</button>
+  <button class="action" id="mapbtn">🗺️ CITY MAP</button>
+  <button class="action" id="savebtn">💾 SAVE GAME</button>
+</div>
+
+<div id="help">Move with arrows • Walk near a building and tap INTERACT</div>
+
+<div id="modal">
+  <div id="box">
+    <h2 id="modalTitle">KANO LIFE</h2>
+    <div id="modalBody"></div>
+    <button class="option close" id="close">Close</button>
+  </div>
+</div>
+
+<script>
+(() => {
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let W=innerWidth,H=innerHeight,DPR=Math.min(devicePixelRatio||1,2);
+function resize(){
+ W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);
+ canvas.width=W*DPR;canvas.height=H*DPR;
+ canvas.style.width=W+"px";canvas.style.height=H+"px";
+ ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener("resize",resize);resize();
+
+const saved=JSON.parse(localStorage.getItem("kanolife-save")||"null");
+const player={
+ x:saved?.x??650,y:saved?.y??560,
+ money:saved?.money??1000000,
+ energy:saved?.energy??100,
+ level:saved?.level??1,
+ xp:saved?.xp??0,
+ home:saved?.home??false,
+ car:saved?.car??false,
+ job:saved?.job??false
+};
+
+const city={
+ width:2200,height:1800,
+ roadY:[260,610,960,1310],
+ roadX:[300,700,1100,1500,1900]
+};
+
+const buildings=[
+ {name:"Kano Shopping Mall",x:820,y:340,w:230,h:150,color:"#a65f50",type:"mall",icon:"🛍️"},
+ {name:"Sabon Gari Market",x:380,y:380,w:190,h:135,color:"#b28a45",type:"market",icon:"🏪"},
+ {name:"City Hospital",x:1250,y:360,w:190,h:145,color:"#e7e7d9",type:"hospital",icon:"🏥"},
+ {name:"Kano Police Station",x:1600,y:390,w:175,h:125,color:"#718da5",type:"police",icon:"🚔"},
+ {name:"Grand Residence",x:350,y:720,w:170,h:130,color:"#c9a77d",type:"house",icon:"🏠"},
+ {name:"Luxury Apartments",x:800,y:730,w:200,h:140,color:"#b8c0bd",type:"apartment",icon:"🏢"},
+ {name:"Kano Garage",x:1260,y:730,w:200,h:130,color:"#777b80",type:"garage",icon:"🚗"},
+ {name:"Kano University",x:1640,y:720,w:230,h:150,color:"#b5a16b",type:"university",icon:"🎓"},
+ {name:"Business District",x:360,y:1080,w:210,h:145,color:"#8b9caa",type:"office",icon:"🏙️"},
+ {name:"Restaurant",x:850,y:1080,w:160,h:125,color:"#b76c52",type:"restaurant",icon:"🍲"},
+ {name:"Petrol Station",x:1250,y:1080,w:180,h:125,color:"#9a7751",type:"fuel",icon:"⛽"},
+ {name:"City Park",x:1640,y:1080,w:230,h:145,color:"#4d9760",type:"park",icon:"🌳"},
+ {name:"Motor Park",x:450,y:1450,w:200,h:125,color:"#8c8c8c",type:"motorpark",icon:"🚌"},
+ {name:"Fashion Store",x:850,y:1450,w:175,h:120,color:"#ad658e",type:"fashion",icon:"👕"}
+];
+
+let keys={},noticeTimer,camX=0,camY=0;
+let clock=8*60;
+let lastTime=performance.now();
+
+function notify(text){
+ const el=document.getElementById("notice");
+ el.textContent=text;el.style.display="block";
+ clearTimeout(noticeTimer);
+ noticeTimer=setTimeout(()=>el.style.display="none",2600);
+}
+function fmt(n){return "₦"+Math.floor(n).toLocaleString("en-NG");}
+function updateUI(){
+ document.getElementById("money").textContent=fmt(player.money);
+ document.getElementById("stats").textContent=
+ "Energy: "+Math.floor(player.energy)+" | Level: "+player.level;
+}
+function saveGame(){
+ localStorage.setItem("kanolife-save",JSON.stringify(player));
+ notify("Game saved on this device! 💾");
+}
+function addXP(n){
+ player.xp+=n;
+ if(player.xp>=player.level*100){
+  player.xp-=player.level*100;player.level++;
+  notify("LEVEL UP! You're now level "+player.level+" 🎉");
+ }
+ updateUI();
+}
+function nearBuilding(){
+ return buildings.find(b=>{
+  let dx=player.x-(b.x+b.w/2),dy=player.y-(b.y+b.h/2);
+  return Math.hypot(dx,dy)<Math.max(b.w,b.h)/2+55;
+ });
+}
+function openModal(title,html){
+ document.getElementById("modalTitle").textContent=title;
+ document.getElementById("modalBody").innerHTML=html;
+ document.getElementById("modal").style.display="flex";
+}
+function closeModal(){document.getElementById("modal").style.display="none";}
+document.getElementById("close").onclick=closeModal;
+
+function button(label,action){
+ return `<button class="option" data-action="${action}">${label}</button>`;
+}
+function interact(){
+ const b=nearBuilding();
+ if(!b){
+  openModal("Explore Kano",`
+   <p>You're exploring Kano City. Walk closer to a building to use it.</p>
+   <p>Earn money through jobs, buy a home and build your life!</p>`);
+  return;
+ }
+ document.getElementById("location").textContent=b.name;
+ let html=`<p>Welcome to <b>${b.name}</b>!</p>`;
+ switch(b.type){
+ case "mall":
+  html+=button("Buy food and supplies — ₦5,000","shop")
+       +button("Buy a stylish outfit — ₦12,000","clothes");
+  break;
+ case "market":
+  html+=button("Buy groceries — ₦3,000","groceries")
+       +button("Sell goods and earn ₦8,000","sell");
+  break;
+ case "house":
+ case "apartment":
+  html+=player.home
+   ?"<p>You own a home! Welcome back.</p>"+button("Rest and restore energy","rest")
+   :button("Buy this property — ₦250,000","home");
+  html+=button("Rent a room for ₦10,000","rent");
+  break;
+ case "garage":
+  html+=player.car
+   ?"<p>You own a car. Take care of it!</p>"+button("Drive around town","drive")
+   :button("Buy a car — ₦350,000","car");
+  break;
+ case "office":
+  html+=button("Apply for an office job","job")
+       +button("Work a shift and earn ₦15,000","work");
+  break;
+ case "university":
+  html+=button("Take a skills course — ₦5,000","study");
+  break;
+ case "restaurant":
+  html+=button("Eat a meal — ₦2,000","eat");
+  break;
+ case "hospital":
+  html+=button("Rest and recover — ₦3,000","heal");
+  break;
+ case "police":
+  html+="<p>Keep the city safe. Follow the law!</p>";
+  break;
+ case "fuel":
+  html+=button("Fill your tank — ₦5,000","fuel");
+  break;
+ case "park":
+  html+=button("Relax in the park","rest");
+  break;
+ case "motorpark":
+  html+=button("Travel across Kano — ₦2,000","travel");
+  break;
+ case "fashion":
+  html+=button("Buy clothes — ₦10,000","clothes");
+  break;
+ }
+ openModal(b.name,html);
+}
+document.getElementById("interact").onclick=interact;
+
+document.getElementById("modalBody").addEventListener("click",e=>{
+ const action=e.target.dataset.action;
+ if(!action)return;
+ const cost=n=>player.money>=n;
+ const spend=n=>player.money-=n;
+ switch(action){
+ case "shop":
+  if(!cost(5000))return notify("Not enough money!");
+  spend(5000);player.energy=Math.min(100,player.energy+10);
+  notify("Supplies purchased!");break;
+ case "groceries":
+  if(!cost(3000))return notify("Not enough money!");
+  spend(3000);player.energy=Math.min(100,player.energy+15);
+  notify("Groceries purchased!");break;
+ case "clothes":
+  if(!cost(10000))return notify("Not enough money!");
+  spend(10000);notify("New outfit purchased! 👕");addXP(10);break;
+ case "sell":
+  player.money+=8000;addXP(15);notify("You sold goods and earned ₦8,000!");break;
+ case "home":
+  if(!cost(250000))return notify("Not enough money!");
+  spend(250000);player.home=true;notify("Congratulations on your new home! 🏠");addXP(50);break;
+ case "rent":
+  if(!cost(10000))return notify("Not enough money!");
+  spend(10000);player.energy=100;notify("You rented a room and rested.");break;
+ case "rest":
+  player.energy=100;notify("You feel refreshed!");break;
+ case "car":
+  if(!cost(350000))return notify("Not enough money!");
+  spend(350000);player.car=true;notify("You bought a car! 🚗");addXP(60);break;
+ case "drive":
+  notify("Driving feature is coming in a future update.");break;
+ case "job":
+  player.job=true;notify("You applied for a job! Now work a shift.");break;
+ case "work":
+  if(player.energy<20)return notify("You're too tired. Rest first.");
+  player.money+=15000;player.energy-=20;addXP(30);
+  notify("Shift completed! You earned ₦15,000.");break;
+ case "study":
+  if(!cost(5000))return notify("Not enough money!");
+  spend(5000);addXP(40);notify("You learned a new skill!");break;
+ case "eat":
+  if(!cost(2000))return notify("Not enough money!");
+  spend(2000);player.energy=Math.min(100,player.energy+30);
+  notify("That meal was delicious!");break;
+ case "heal":
+  if(!cost(3000))return notify("Not enough money!");
+  spend(3000);player.energy=100;notify("You're feeling better.");break;
+ case "fuel":
+  if(!player.car)return notify("You need to buy a car first.");
+  if(!cost(5000))return notify("Not enough money!");
+  spend(5000);notify("Your car is refuelled.");break;
+ case "travel":
+  if(!cost(2000))return notify("Not enough money!");
+  spend(2000);player.x=700;player.y=560;
+  notify("You travelled to another part of Kano.");break;
+ }
+ updateUI();closeModal();
+});
+
+document.getElementById("mapbtn").onclick=()=>{
+ openModal("🗺️ Kano City Map",
+ `<p>Explore the city and visit these locations:</p><p>
+ 🛍️ Shopping Mall<br>🏪 Sabon Gari Market<br>🏠 Houses and Apartments<br>
+ 🏙️ Business District<br>🎓 University<br>🚗 Garage<br>🍲 Restaurant<br>
+ 🏥 Hospital<br>🌳 City Park<br>🚌 Motor Park</p>
+ <p>Move your character around the city to discover each place.</p>`);
+};
+document.getElementById("savebtn").onclick=saveGame;
+
+document.querySelectorAll(".ctrl").forEach(btn=>{
+ const dir=btn.dataset.dir;
+ btn.addEventListener("pointerdown",e=>{
+  e.preventDefault();keys[dir]=true;
+  try{btn.setPointerCapture(e.pointerId)}catch(_){}
+ });
+ const stop=e=>{e.preventDefault();keys[dir]=false};
+ btn.addEventListener("pointerup",stop);
+ btn.addEventListener("pointercancel",stop);
+ btn.addEventListener("lostpointercapture",()=>keys[dir]=false);
+});
+addEventListener("keydown",e=>{
+ if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","w","a","s","d"].includes(e.key)){
+  e.preventDefault();
+  if(e.key==="ArrowUp"||e.key==="w")keys.up=true;
+  if(e.key==="ArrowDown"||e.key==="s")keys.down=true;
+  if(e.key==="ArrowLeft"||e.key==="a")keys.left=true;
+  if(e.key==="ArrowRight"||e.key==="d")keys.right=true;
+ }
+ if(e.key==="e"||e.key==="Enter")interact();
+});
+addEventListener("keyup",e=>{
+ if(e.key==="ArrowUp"||e.key==="w")keys.up=false;
+ if(e.key==="ArrowDown"||e.key==="s")keys.down=false;
+ if(e.key==="ArrowLeft"||e.key==="a")keys.left=false;
+ if(e.key==="ArrowRight"||e.key==="d")keys.right=false;
+});
+
+function rect(x,y,w,h,color){
+ ctx.fillStyle=color;ctx.fillRect(x,y,w,h);
+}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ camX=Math.max(0,Math.min(city.width-W,player.x-W/2));
+ camY=Math.max(0,Math.min(city.height-H,player.y-H/2));
+ ctx.save();ctx.translate(-camX,-camY);
+
+ rect(0,0,city.width,city.height,"#789b63");
+
+ // City blocks and neighbourhood paths
+ for(let x=0;x<city.width;x+=100){
+  for(let y=0;y<city.height;y+=100){
+   if(Math.random()<0.0)rect(x,y,80,80,"#7fa46a");
+  }
+ }
+ // Roads
+ city.roadY.forEach(y=>{
+  rect(0,y,city.width,70,"#62686b");
+  rect(0,y+33,city.width,3,"#e9dba1");
+ });
+ city.roadX.forEach(x=>{
+  rect(x,0,70,city.height,"#62686b");
+  rect(x+33,0,3,city.height,"#e9dba1");
+ });
+
+ // Sidewalks and small homes
+ for(let x=45;x<city.width-80;x+=130){
+  for(let y=80;y<city.height-80;y+=130){
+   let roadNear=city.roadY.some(r=>Math.abs(y-r)<95)||
+                city.roadX.some(r=>Math.abs(x-r)<95);
+   let buildingNear=buildings.some(b=>x>b.x-100&&x<b.x+b.w+20&&y>b.y-100&&y<b.y+b.h+20);
+   if(!roadNear&&!buildingNear){
+    rect(x,y,65,50,"#d2b58a");
+    rect(x+6,y+6,53,38,"#b58c65");
+    rect(x+27,y+24,13,26,"#544437");
+    rect(x+10,y+12,12,10,"#8bb7c8");
+   }
+  }
+ }
+
+ // Buildings
+ buildings.forEach(b=>{
+  rect(b.x+7,b.y+9,b.w,b.h,"#0004");
+  rect(b.x,b.y,b.w,b.h,b.color);
+  rect(b.x-5,b.y-7,b.w+10,15,"#d8d1bd");
+  rect(b.x+12,b.y+15,b.w-24,6,"#ffffff55");
+  ctx.fillStyle="#fff";ctx.textAlign="center";
+  ctx.font="bold 14px Arial";
+  ctx.fillText(b.icon,b.x+b.w/2,b.y+b.h/2-5);
+  ctx.font="bold 11px Arial";
+  ctx.fillText(b.name,b.x+b.w/2,b.y+b.h/2+17);
+  rect(b.x+b.w/2-12,b.y+b.h-20,24,20,"#51463c");
+ });
+
+ // Decorative trees
+ for(let i=0;i<45;i++){
+  let x=(i*173+80)%city.width,y=(i*239+40)%city.height;
+  if(!buildings.some(b=>x>b.x-25&&x<b.x+b.w+25&&y>b.y-25&&y<b.y+b.h+25)){
+   ctx.fillStyle="#356d43";ctx.beginPath();ctx.arc(x,y,13,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle="#4b8c51";ctx.beginPath();ctx.arc(x-3,y-4,9,0,Math.PI*2);ctx.fill();
+  }
+ }
+
+ // Player character
+ ctx.fillStyle="#0004";ctx.beginPath();ctx.ellipse(player.x,player.y+13,13,6,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#f0bd8b";ctx.beginPath();ctx.arc(player.x,player.y-8,9,0,Math.PI*2);ctx.fill();
+ rect(player.x-9,player.y,18,20,"#2779d4");
+ rect(player.x-8,player.y+18,6,10,"#28384a");
+ rect(player.x+2,player.y+18,6,10,"#28384a");
+ ctx.fillStyle="white";ctx.textAlign="center";ctx.font="bold 10px Arial";
+ ctx.fillText("YOU",player.x,player.y-24);
+
+ ctx.restore();
+
+ // Minimap
+ const mw=105,mh=80,mx=W-mw-12,my=H-125;
+ ctx.fillStyle="#102019dd";ctx.fillRect(mx,my,mw,mh);
+ ctx.strokeStyle="#8cf0a1";ctx.strokeRect(mx,my,mw,mh);
+ buildings.forEach(b=>{
+  ctx.fillStyle="#d3bb8c";
+  ctx.fillRect(mx+b.x/city.width*mw,my+b.y/city.height*mh,3,3);
+ });
+ ctx.fillStyle="#ff5d5d";
+ ctx.fillRect(mx+player.x/city.width*mw-2,my+player.y/city.height*mh-2,5,5);
+}
+function tick(now){
+ let dt=Math.min((now-lastTime)/16.67,2);lastTime=now;
+ let dx=0,dy=0;
+ if(keys.up)dy-=1;if(keys.down)dy+=1;
+ if(keys.left)dx-=1;if(keys.right)dx+=1;
+ if(dx||dy){
+  let len=Math.hypot(dx,dy);
+  player.x+=dx/len*3.2*dt;
+  player.y+=dy/len*3.2*dt;
+  player.x=Math.max(20,Math.min(city.width-20,player.x));
+  player.y=Math.max(20,Math.min(city.height-20,player.y));
+ }
+ clock=(clock+0.05)%1440;
+ draw();requestAnimationFrame(tick);
+}
+updateUI();
+requestAnimationFrame(tick);
+notify("Welcome to KANO LIFE! Explore your city. 🌆");
+})();
+</script>
+</body>
+</html>
