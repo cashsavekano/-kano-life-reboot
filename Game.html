@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>KANO LIFE — Umar Abubakar Faruk</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#17231d;color:white;font-family:Arial;overflow:hidden}button{border:1px solid #68916e;border-radius:10px;padding:10px;background:#244532;color:white;font-weight:bold}canvas{display:block;width:100vw;height:100dvh;touch-action:none}
+#hud{position:fixed;z-index:3;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;pointer-events:none;gap:6px}.card{background:#14271fee;border:1px solid #598b68;border-radius:12px;padding:9px;font-size:12px}.brand{font-weight:bold;color:#8cf0a1;font-size:17px}#cash{color:#ffe58a;font-weight:bold;font-size:15px;margin-top:5px}
+#hint{position:fixed;z-index:4;top:82px;left:50%;transform:translateX(-50%);background:#10231fee;padding:9px;border-radius:10px;font-size:12px;text-align:center;max-width:85%}
+#pad{position:fixed;z-index:3;bottom:12px;left:12px;display:grid;grid-template-columns:44px 44px 44px;grid-template-rows:44px 44px 44px;gap:4px}#pad button{padding:0;font-size:20px;background:#14271fee}.up{grid-column:2}.left{grid-column:1;grid-row:2}.down{grid-column:2;grid-row:2}.right{grid-column:3;grid-row:2}
+#actions{position:fixed;z-index:3;right:9px;bottom:12px;display:flex;flex-direction:column;gap:6px;width:124px}#actions button{font-size:11px;padding:10px 4px;background:#193b2aee}
+#modal{display:none;position:fixed;inset:0;z-index:10;background:#000b;align-items:center;justify-content:center;padding:15px}#box{width:min(440px,100%);max-height:82dvh;overflow:auto;background:#172a20;border:1px solid #8cf0a1;border-radius:17px;padding:16px}#box h2{color:#8cf0a1;margin-top:0}.option{display:block;width:100%;text-align:left;margin:8px 0;padding:12px;background:#254633;color:white;border:1px solid #537c5e;border-radius:10px}.close{background:#713d37}
+</style></head><body>
+<canvas id="scene"></canvas>
+<div id="hud"><div class="card"><div class="brand">🏙️ KANO LIFE</div><div id="place">Starter House</div><div id="level">Level 1 · New Resident</div></div><div class="card"><div id="cash">₦1,000,000</div><div id="energy">Energy: 100%</div></div></div>
+<div id="hint">Welcome home! Explore your house.</div>
+<div id="pad"><button class="up" data-dir="up">▲</button><button class="left" data-dir="left">◀</button><button class="down" data-dir="down">▼</button><button class="right" data-dir="right">▶</button></div>
+<div id="actions"><button id="interact">📍 INTERACT</button><button id="properties">🏡 RENT / BUY HOME</button><button id="furniture">🛋️ FURNITURE</button><button id="outside">🚪 LEAVE / GO HOME</button><button id="save">💾 SAVE GAME</button></div>
+<div id="modal"><div id="box"><h2 id="title">KANO LIFE</h2><div id="body"></div><button class="option close" id="close">Close</button></div></div>
+<script>
+(()=>{
+const c=document.querySelector('#scene'),g=c.getContext('2d');let W,H,D=1,keys={},last=0,timer;
+function size(){W=innerWidth;H=innerHeight;D=Math.min(devicePixelRatio||1,2);c.width=W*D;c.height=H*D;c.style.width=W+'px';c.style.height=H+'px';g.setTransform(D,0,0,D,0,0)}addEventListener('resize',size);size();
+const base={x:410,y:390,money:1000000,energy:100,level:1,xp:0,scene:'home',home:'Starter House',owned:['Starter House'],furniture:['Bed','Sofa'],upgrades:[],car:false};
+let p;try{p={...base,...JSON.parse(localStorage.getItem('kanolife-v2')||'{}')}}catch(e){p={...base}}
+const homes=[['Starter House',0,'A simple starter home'],['City Room',50000,'A small rented room'],['Family Apartment',250000,'A comfortable apartment'],['Modern Villa',650000,'A spacious family home'],['Luxury Mansion',1500000,'A premium home']];
+const items=[['Bed',0,'🛏️'],['Sofa',0,'🛋️'],['Television',60000,'📺'],['Dining Table',35000,'🍽️'],['Wardrobe',25000,'🚪'],['Refrigerator',45000,'🧊'],['House Plants',10000,'🪴'],['Luxury Bed',80000,'🛏️']];
+const buildings=[['Kano Real Estate',220,210,200,125,'estate','#a98a63','🏡'],['Shopping Centre',620,210,210,145,'mall','#a85f50','🛍️'],['Sabon Gari Market',1010,225,190,130,'market','#b18b45','🏪'],['Business Offices',230,650,200,135,'job','#718a9c','🏢'],['Restaurant',650,650,170,125,'food','#b76c52','🍲'],['Kano Garage',1050,650,190,130,'garage','#777b80','🚗']];
+const cash=n=>'₦'+Math.floor(n).toLocaleString('en-NG');
+function update(){document.querySelector('#cash').textContent=cash(p.money);document.querySelector('#energy').textContent='Energy: '+Math.floor(p.energy)+'%';document.querySelector('#level').textContent='Level '+p.level+' · '+(p.level<3?'New Resident':p.level<6?'City Resident':'Kano Entrepreneur');document.querySelector('#place').textContent=p.scene==='home'?p.home:'Kano City'}
+function say(s){let e=document.querySelector('#hint');e.textContent=s;e.style.display='block';clearTimeout(timer);timer=setTimeout(()=>e.style.display='none',3000)}
+function save(){localStorage.setItem('kanolife-v2',JSON.stringify(p));say('Progress saved on this device!')}
+function xp(n){p.xp+=n;while(p.xp>=p.level*100){p.xp-=p.level*100;p.level++;say('Level up! Level '+p.level)}update()}
+function show(t,h){document.querySelector('#title').textContent=t;document.querySelector('#body').innerHTML=h;document.querySelector('#modal').style.display='flex'}function close(){document.querySelector('#modal').style.display='none'}document.querySelector('#close').onclick=close;
+const opt=(s,a)=>'<button class="option" data-act="'+a+'">'+s+'</button>';
+function propMenu(){let h='<p>Choose a place to live. Prices are virtual game money.</p>';homes.forEach((v,i)=>{h+='<p><b>🏠 '+v[0]+'</b><br>'+v[2]+'<br>'+(i?cash(v[1]):'Starter home')+'</p>';if(v[0]===p.home)h+='<p>✅ Current home</p>';else if(p.owned.includes(v[0]))h+=opt('Move into this home','move:'+i);else if(i===0)h+=opt('Return to starter home','move:0');else h+=opt('Buy home · '+cash(v[1]),'buy:'+i)+opt('Rent home · '+cash(Math.max(10000,Math.floor(v[1]*.08))),'rent:'+i)});show('🏡 Property Office',h)}
+function furnMenu(){let h='<p>Buy furniture for your home.</p>';items.forEach(v=>{h+='<p><b>'+v[2]+' '+v[0]+'</b><br>'+(p.furniture.includes(v[0])?'Already owned':cash(v[1]))+'</p>';if(!p.furniture.includes(v[0]))h+=opt('Buy '+v[0]+' · '+cash(v[1]),'item:'+v[0])});h+=opt('Renovate home · ₦100,000','upgrade');show('🛋️ Furniture & Upgrades',h)}
+document.querySelector('#properties').onclick=propMenu;document.querySelector('#furniture').onclick=furnMenu;
+document.querySelector('#body').addEventListener('click',e=>{let a=e.target.dataset.act;if(!a)return;
+if(a.startsWith('move:')){p.home=homes[+a.split(':')[1]][0];p.scene='home';p.x=410;p.y=390;close();update();say('Welcome to '+p.home);return}
+if(a.startsWith('buy:')){let i=+a.split(':')[1],v=homes[i];if(p.money<v[1])return say('Not enough money');p.money-=v[1];p.owned.push(v[0]);p.home=v[0];p.scene='home';p.x=410;p.y=390;xp(60);close();update();say('You bought '+v[0]+'!');return}
+if(a.startsWith('rent:')){let i=+a.split(':')[1],v=homes[i],n=Math.max(10000,Math.floor(v[1]*.08));if(p.money<n)return say('Not enough money to rent');p.money-=n;p.home=v[0];p.scene='home';p.x=410;p.y=390;close();update();say('You rented '+v[0]+'!');return}
+if(a.startsWith('item:')){let name=a.slice(5),v=items.find(q=>q[0]===name);if(!v||p.furniture.includes(name))return;if(p.money<v[1])return say('Not enough money');p.money-=v[1];p.furniture.push(name);xp(10);furnMenu();say(name+' added to your collection');return}
+if(a==='upgrade'){if(p.upgrades.includes('renovated'))return say('Already renovated');if(p.money<100000)return say('You need ₦100,000');p.money-=100000;p.upgrades.push('renovated');xp(40);close();update();say('Home renovation complete!');return}
+if(a==='furn'){furnMenu();return}if(a==='prop'){propMenu();return}
+if(a==='sleep'||a==='relax'){p.energy=100;close();update();say('You feel refreshed!');return}
+if(a==='leave'){p.scene='city';p.x=460;p.y=450;close();update();say('Welcome to Kano City!');return}
+if(a==='work'){if(p.energy<20)return say('Too tired—go home and rest');p.money+=15000;p.energy-=20;xp(30);close();update();say('You earned ₦15,000');return}
+if(a==='food'){if(p.money<2000)return say('Not enough money');p.money-=2000;p.energy=Math.min(100,p.energy+30);close();update();say('Meal purchased');return}
+if(a==='sell'){p.money+=8000;xp(10);close();update();say('You earned ₦8,000');return}
+if(a==='car'){if(p.car)return say('Driving will arrive in a future update');if(p.money<350000)return say('Not enough money');p.money-=350000;p.car=true;close();update();say('You bought a car!');return}
+});
+function near(){return buildings.find(b=>Math.hypot(p.x-(b[1]+b[3]/2),p.y-(b[2]+b[4]/2))<Math.max(b[3],b[4])/2+45)}
+function obj(){for(let q of [['bed',180,150],['sofa',485,150],['door',770,435],['table',210,355],['tv',680,130]])if(Math.hypot(p.x-q[1],p.y-q[2])<65)return q[0];return ''}
+function interact(){if(p.scene==='home'){let o=obj();if(o==='bed')show('🛏️ Bedroom','<p>Sleep to restore energy.</p>'+opt('Sleep','sleep'));else if(o==='sofa')show('🛋️ Living Room','<p>Relax in your living room.</p>'+opt('Relax','relax'));else if(o==='door')show('🚪 Front Door','<p>Ready to explore Kano?</p>'+opt('Leave home','leave'));else show('Your Home','<p>Explore your home and decorate it.</p>'+opt('Furniture shop','furn')+opt('Rent or buy a home','prop'))}
+else{let b=near();if(!b)return show('Kano City','<p>Explore Kano or visit the property office.</p>'+opt('Property office','prop'));let h='<p>Welcome to <b>'+b[0]+'</b>.</p>';if(b[5]==='estate')h+=opt('Browse homes','prop');if(b[5]==='mall')h+=opt('Shop for furniture','furn');if(b[5]==='job')h+=opt('Work and earn ₦15,000','work');if(b[5]==='food')h+=opt('Buy a meal · ₦2,000','food');if(b[5]==='market')h+=opt('Sell goods · earn ₦8,000','sell');if(b[5]==='garage')h+=opt('Buy a car · ₦350,000','car');show(b[0],h)}}
+document.querySelector('#interact').onclick=interact;
+document.querySelector('#outside').onclick=()=>{if(p.scene==='home'){p.scene='city';p.x=460;p.y=450;say('You stepped outside. Explore Kano!')}else{p.scene='home';p.x=410;p.y=390;say('Welcome back home!')}update()};
+document.querySelector('#save').onclick=save;
+function rect(x,y,w,h,col){g.fillStyle=col;g.fillRect(x,y,w,h)}function txt(s,x,y,n=13,col='#fff'){g.fillStyle=col;g.font='bold '+n+'px Arial';g.textAlign='center';g.fillText(s,x,y)}
+function homeDraw(){rect(0,0,W,H,'#17221d');let s=Math.min((W-24)/850,(H-160)/510,1),ox=(W-850*s)/2,oy=Math.max(105,(H-510*s)/2);g.save();g.translate(ox,oy);g.scale(s,s);
+rect(0,0,850,510,'#d4c7a7');rect(15,15,820,480,'#bba88a');rect(25,25,330,220,'#e8d8bb');rect(365,25,450,220,'#d5c6a9');rect(25,260,500,220,'#c9b392');rect(535,260,280,220,'#ddceb1');rect(350,15,12,235,'#695a49');rect(15,250,820,12,'#695a49');rect(525,255,12,240,'#695a49');rect(120,15,75,10,'#8fc7dc');rect(600,15,75,10,'#8fc7dc');
+rect(50,60,135,145,'#735745');rect(58,67,119,128,'#eee6dc');rect(65,74,48,34,'#fff');rect(120,74,48,34,'#fff');rect(58,115,119,80,'#5e9db3');rect(385,80,230,120,'#9b6753');rect(395,90,210,100,'#b47f67');rect(420,105,160,65,'#7658a0');rect(430,95,140,28,'#9175b6');rect(435,110,55,45,'#aa93c7');rect(505,110,55,45,'#aa93c7');rect(690,65,80,55,'#333a40');rect(697,72,66,39,'#7ec3d1');rect(710,120,40,8,'#5b5041');rect(625,150,90,40,'#946943');rect(555,285,230,35,'#b5b6ad');rect(560,325,65,90,'#8c9a98');rect(645,325,65,90,'#8c9a98');rect(725,325,50,90,'#8c9a98');rect(120,310,180,95,'#9a7049');rect(135,320,150,75,'#b78b5f');[[105,320],[105,390],[305,320],[305,390]].forEach(v=>rect(v[0],v[1],20,20,'#77553b'));rect(735,425,65,70,'#67452e');rect(745,435,45,60,'#946a44');txt('BEDROOM',180,48,12,'#473c31');txt('LIVING ROOM',590,48,12,'#473c31');txt('DINING',210,288,12,'#473c31');txt('KITCHEN',665,285,12,'#473c31');
+p.furniture.filter(n=>!['Bed','Sofa'].includes(n)).forEach((n,i)=>txt((items.find(q=>q[0]===n)||[])[2]||'✨',45+(i%5)*145,455,23));g.fillStyle='#f0bd8b';g.beginPath();g.arc(p.x,p.y,11,0,Math.PI*2);g.fill();rect(p.x-9,p.y+8,18,20,'#347bc6');rect(p.x-8,p.y+27,6,12,'#24394d');rect(p.x+2,p.y+27,6,12,'#24394d');g.restore()}
+function cityDraw(){rect(0,0,W,H,'#83a76e');let s=Math.min((W-20)/1800,(H-125)/1400,1),ox=(W-1800*s)/2,oy=Math.max(90,(H-1400*s)/2);g.save();g.translate(ox,oy);g.scale(s,s);rect(0,0,1800,1400,'#83a76e');for(let y=100;y<1400;y+=250)rect(0,y,1800,55,'#60686b');for(let x=100;x<1800;x+=300)rect(x,0,55,1400,'#60686b');for(let x=40;x<1800;x+=150)for(let y=40;y<1400;y+=170)if(Math.abs((y%250)-100)>70&&Math.abs((x%300)-100)>70){rect(x,y,70,52,'#c6a77e');rect(x+7,y+7,56,38,'#ae8863')}buildings.forEach(b=>{rect(b[1]+6,b[2]+8,b[3],b[4],'#0004');rect(b[1],b[2],b[3],b[4],b[6]);txt(b[7],b[1]+b[3]/2,b[2]+b[4]/2,26);txt(b[0],b[1]+b[3]/2,b[2]+b[4]/2+24,13)});g.fillStyle='#f0bd8b';g.beginPath();g.arc(p.x,p.y,11,0,Math.PI*2);g.fill();rect(p.x-9,p.y+8,18,20,'#347bc6');rect(p.x-8,p.y+27,6,12,'#24394d');rect(p.x+2,p.y+27,6,12,'#24394d');g.restore()}
+function draw(){g.clearRect(0,0,W,H);p.scene==='home'?homeDraw():cityDraw()}
+document.querySelectorAll('[data-dir]').forEach(b=>{let d=b.dataset.dir;b.addEventListener('pointerdown',e=>{e.preventDefault();keys[d]=true;try{b.setPointerCapture(e.pointerId)}catch(_){}});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,()=>keys[d]=false))});
+const km={ArrowUp:'up',w:'up',ArrowDown:'down',s:'down',ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right'};addEventListener('keydown',e=>{if(km[e.key]){keys[km[e.key]]=true;e.preventDefault()}if(e.key==='e'||e.key==='Enter')interact()});addEventListener('keyup',e=>{if(km[e.key])keys[km[e.key]]=false});
+function loop(now){let dt=Math.min((now-last)/16.67||1,2);last=now;let x=0,y=0;if(keys.up)y--;if(keys.down)y++;if(keys.left)x--;if(keys.right)x++;if(x||y){let n=Math.hypot(x,y);p.x+=x/n*3.1*dt;p.y+=y/n*3.1*dt;if(p.scene==='home'){p.x=Math.max(35,Math.min(810,p.x));p.y=Math.max(35,Math.min(465,p.y))}else{p.x=Math.max(15,Math.min(1785,p.x));p.y=Math.max(15,Math.min(1385,p.y))}}draw();requestAnimationFrame(loop)}
+update();requestAnimationFrame(loop);say('Welcome home! Walk around and tap INTERACT.');
+})();
+</script></body></html>
