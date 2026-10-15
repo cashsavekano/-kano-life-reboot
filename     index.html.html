@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#a20f22">
+<title>KANO LIFE — City Simulator</title>
+<style>
+:root{--red:#a20f22;--red2:#d62538;--cream:#fff8f0;--ink:#21191a;--gold:#f3c969;--green:#217a50;--muted:#7b6c6d;--card:#fff;--line:#eadcda}
+*{box-sizing:border-box}body{margin:0;background:#f5eee9;color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input{font:inherit}button{cursor:pointer}
+.top{background:linear-gradient(135deg,#7c0918,var(--red),#d62538);color:white;padding:18px 16px 16px;position:sticky;top:0;z-index:5;box-shadow:0 4px 16px #3a06152b}
+.brand{display:flex;align-items:center;gap:12px}.logo{height:48px;width:48px;border:2px solid #fff7;border-radius:14px;display:grid;place-items:center;font-size:24px;background:#ffffff14}.brand h1{font-size:22px;letter-spacing:1.2px;margin:0;font-weight:900}.brand p{margin:2px 0 0;font-size:12px;color:#ffe6e8}.topstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.stat{background:#ffffff18;border:1px solid #ffffff24;padding:8px 10px;border-radius:12px}.stat small{display:block;color:#ffe1e4;font-size:10px;text-transform:uppercase;letter-spacing:.7px}.stat strong{font-size:15px}
+main{max-width:900px;margin:auto;padding:14px 12px 90px}.hero{border-radius:18px;padding:18px;color:white;background:linear-gradient(110deg,#390710d9,#8d0b1cdd),radial-gradient(circle at 80% 20%,#ed6570,#6e0717);position:relative;overflow:hidden;box-shadow:0 8px 24px #8d0b1c1f}.hero:after{content:"🏙️";position:absolute;font-size:90px;right:8px;bottom:-15px;opacity:.2}.hero h2{margin:0 0 6px;font-size:23px}.hero p{margin:0;max-width:75%;font-size:13px;line-height:1.5;color:#ffe7e8}.hero .tag{display:inline-block;margin-top:12px;background:var(--gold);color:#4d1a12;font-size:11px;font-weight:800;padding:5px 9px;border-radius:30px}
+.sectionhead{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 10px}.sectionhead h3{font-size:16px;margin:0}.sectionhead span{font-size:11px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 3px 10px #45101808;min-width:0}.location{display:flex;flex-direction:column;gap:7px;min-height:146px}.emoji{font-size:27px}.card h4{margin:0;font-size:14px}.card p{margin:0;color:var(--muted);font-size:11px;line-height:1.4}.btn{border:0;border-radius:10px;padding:10px 12px;font-weight:800;font-size:12px;background:var(--red);color:white}.btn:active{transform:scale(.98)}.btn.secondary{background:#f8e7e9;color:var(--red)}.btn.gold{background:var(--gold);color:#4d1a12}.btn.green{background:var(--green)}.btn.full{width:100%;margin-top:auto}.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.action{display:flex;gap:10px;align-items:center;text-align:left;background:white;border:1px solid var(--line);padding:12px;border-radius:14px;color:var(--ink)}.action .emoji{font-size:23px}.action strong{display:block;font-size:12px}.action small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px}.panel h3{font-size:15px;margin:0 0 10px}.row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid #f2e7e5;font-size:12px}.row:last-child{border-bottom:0}.badge{font-size:10px;font-weight:800;padding:4px 7px;border-radius:30px;background:#f8e7e9;color:var(--red)}.bar{height:7px;background:#f0e4e2;border-radius:20px;overflow:hidden;margin-top:6px}.bar span{display:block;height:100%;background:linear-gradient(90deg,#c21c30,#ed5967);width:70%;border-radius:20px}.notice{font-size:12px;line-height:1.5;background:#fff4d9;border:1px solid #f0dca3;border-radius:12px;padding:11px;color:#624615;margin-top:12px}.feed{max-height:170px;overflow:auto}.feed p{font-size:11px;line-height:1.45;margin:7px 0;color:#625456}.feed p:first-child{margin-top:0}.feed b{color:var(--red)}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:7px 5px calc(7px + env(safe-area-inset-bottom));z-index:6}.bottom button{border:0;background:transparent;color:#8b7779;font-size:10px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:3px}.bottom button span{font-size:19px}.bottom button.active{color:var(--red);font-weight:900}
+.screen{display:none}.screen.active{display:block}.modalback{display:none;position:fixed;inset:0;background:#18060bd9;z-index:20;align-items:center;justify-content:center;padding:18px}.modalback.show{display:flex}.modal{width:min(430px,100%);background:#fffaf6;border-radius:20px;padding:20px;box-shadow:0 20px 70px #0006}.modal h2{margin:0 0 8px;font-size:20px}.modal p{font-size:13px;color:#6f5d60;line-height:1.5}.modal .btn{margin-top:8px}.small{font-size:10px;color:var(--muted)}.progress{font-size:11px;color:var(--muted)}.pillrow{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.pill{background:#f9e9e9;color:var(--red);font-size:10px;font-weight:800;border-radius:20px;padding:6px 9px}
+@media(min-width:650px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.actions{grid-template-columns:repeat(3,minmax(0,1fr))}.hero h2{font-size:28px}.topstats{max-width:520px}.bottom{left:calc(50% - 300px);right:calc(50% - 300px);border-radius:16px 16px 0 0}}
+</style>
+</head>
+<body>
+<header class="top">
+ <div class="brand"><div class="logo">🏙️</div><div><h1>KANO LIFE</h1><p>YOUR CITY. YOUR STORY. • RED & WHITE EDITION</p></div></div>
+ <div class="topstats">
+  <div class="stat"><small>Cash</small><strong id="cash">₦2,000,000</strong></div>
+  <div class="stat"><small>Energy</small><strong id="energy">100/100</strong></div>
+  <div class="stat"><small>Reputation</small><strong id="rep">50/100</strong></div>
+ </div>
+</header>
+<main>
+ <section id="home" class="screen active">
+  <div class="hero"><h2>Welcome to Kano 👋</h2><p>Build your life in the ancient city. Explore neighborhoods, work, start businesses, manage your home, and make choices that shape your story.</p><span class="tag">VERSION 1 • CORE SYSTEMS INCLUDED</span></div>
+  <div class="sectionhead"><h3>Explore Kano</h3><span>Choose a destination</span></div>
+  <div class="grid" id="locations"></div>
+  <div class="sectionhead"><h3>Quick actions</h3><span>Make your next move</span></div>
+  <div class="actions">
+   <button class="action" onclick="doAction('work')"><span class="emoji">💼</span><span><strong>Find work</strong><small>Earn a day’s income</small></span></button>
+   <button class="action" onclick="doAction('rest')"><span class="emoji">🛏️</span><span><strong>Rest at home</strong><small>Restore your energy</small></span></button>
+   <button class="action" onclick="doAction('food')"><span class="emoji">🍲</span><span><strong>Buy food</strong><small>Keep your needs met</small></span></button>
+   <button class="action" onclick="doAction('business')"><span class="emoji">🏪</span><span><strong>Start a business</strong><small>Invest and earn</small></span></button>
+   <button class="action" onclick="doAction('generator')"><span class="emoji">⚡</span><span><strong>Generator</strong><small>Manage home power</small></span></button>
+   <button class="action" onclick="doAction('patrol')"><span class="emoji">🛡️</span><span><strong>Hisbah patrol</strong><small>Local civic event</small></span></button>
+  </div>
+  <div class="panel"><h3>📌 Your current status</h3><div class="row"><span>Home</span><strong id="homeStatus">Kano City</strong></div><div class="row"><span>Day</span><strong id="day">Day 1</strong></div><div class="row"><span>Food</span><span class="badge" id="foodStatus">Supplied</span></div><div class="row"><span>Power</span><span class="badge" id="powerStatus">Generator ready</span></div><div class="row"><span>Business</span><strong id="businessStatus">Not started</strong></div></div>
+  <div class="notice">🎮 <b>Your story, your choices.</b> This is a playable starter game with saving, money, energy, locations, jobs, business, home power, and city events included. Your progress is saved on this device.</div>
+ </section>
+ <section id="city" class="screen">
+  <div class="hero"><h2>Kano City Map 🗺️</h2><p>Pick a district to visit. Each destination has its own activity and event.</p></div>
+  <div class="grid" id="cityLocations" style="margin-top:12px"></div>
+  <div class="panel"><h3>Recent city activity</h3><div id="cityFeed" class="feed"></div></div>
+ </section>
+ <section id="life" class="screen">
+  <div class="hero"><h2>Life & Progress</h2><p>Take care of yourself, grow your reputation, and build your future.</p></div>
+  <div class="panel"><h3>Player profile</h3><div class="row"><span>Cash</span><strong id="profileCash">₦2,000,000</strong></div><div class="row"><span>Energy</span><strong id="profileEnergy">100 / 100</strong></div><div class="bar"><span id="energyBar" style="width:100%"></span></div><div class="row"><span>Reputation</span><strong id="profileRep">50 / 100</strong></div><div class="bar"><span id="repBar" style="width:50%"></span></div><div class="row"><span>Food supplies</span><strong id="profileFood">5</strong></div><div class="row"><span>Owned businesses</span><strong id="profileBiz">0</strong></div><div class="row"><span>Generator</span><strong id="profileGen">Owned</strong></div></div>
+  <div class="sectionhead"><h3>Personal actions</h3><span>Manage your day</span></div>
+  <div class="actions">
+   <button class="action" onclick="doAction('rest')"><span class="emoji">🛌</span><span><strong>Sleep / Rest</strong><small>Recover energy</small></span></button>
+   <button class="action" onclick="doAction('food')"><span class="emoji">🛒</span><span><strong>Buy groceries</strong><small>₦15,000 for supplies</small></span></button>
+   <button class="action" onclick="doAction('work')"><span class="emoji">💼</span><span><strong>Do a job</strong><small>Earn money</small></span></button>
+  </div>
+  <div class="panel"><h3>Save data</h3><p class="small">Your game saves automatically in this browser on this device.</p><button class="btn secondary" onclick="saveGame(true)">Save now</button> <button class="btn secondary" onclick="resetConfirm()">Restart game</button></div>
+ </section>
+ <section id="businesses" class="screen">
+  <div class="hero"><h2>Business District 🏪</h2><p>Invest your starting cash into small businesses and collect earnings.</p></div>
+  <div class="grid" id="businessCards" style="margin-top:12px"></div>
+  <div class="panel"><h3>Your businesses</h3><div id="ownedBusinesses"></div><button class="btn green full" onclick="collectIncome()">Collect business income</button></div>
+ </section>
+ <section id="house" class="screen">
+  <div class="hero"><h2>My Home 🏠</h2><p>Start in a small, humble house. Work, save money, upgrade your home, buy furniture, and become a mansion owner.</p><span class="tag">YOUR HOME • YOUR PROGRESS</span></div>
+  <div class="panel"><h3 id="houseTitle">🛖 Small Starter Home</h3><p id="houseDescription">A simple home to begin your journey.</p><div class="row"><span>Home level</span><strong id="houseLevel">Level 1 / 5</strong></div><div class="row"><span>Interior condition</span><strong id="houseCondition">Basic</strong></div><div class="row"><span>Furniture owned</span><strong id="furnitureCount">0</strong></div><div id="houseProgress" class="pillrow"></div></div>
+  <div class="sectionhead"><h3>Upgrade your home</h3><span>Pay with in-game cash</span></div>
+  <div class="panel"><div class="row"><span id="nextHouseName">Next: Better House</span><strong id="nextHouseCost">₦250,000</strong></div><p id="nextHouseDescription" class="small">Improve your home to unlock a better place.</p><button class="btn full" id="upgradeHouseButton" onclick="upgradeHouse()">Upgrade home</button></div>
+  <div class="sectionhead"><h3>Furniture shop 🛋️</h3><span>Make it feel like home</span></div>
+  <div class="grid" id="furnitureCards"></div>
+  <div class="panel"><h3>Home comforts</h3><button class="btn secondary" onclick="doAction('rest')">🛏️ Rest at home</button> <button class="btn secondary" onclick="saveGame(true)">💾 Save progress</button></div>
+ </section>
+ <section id="settings" class="screen">
+  <div class="hero"><h2>Game settings ⚙️</h2><p>KANO LIFE is built as a single-file web game. These systems are available from the first version.</p></div>
+  <div class="panel"><h3>Included in this edition</h3>
+   <div class="row"><span>Starting cash</span><strong>₦2,000,000</strong></div>
+   <div class="row"><span>Kano-inspired destinations</span><span class="badge">Included</span></div>
+   <div class="row"><span>Jobs and earnings</span><span class="badge">Included</span></div>
+   <div class="row"><span>Businesses and income</span><span class="badge">Included</span></div>
+   <div class="row"><span>Energy, food and home power</span><span class="badge">Included</span></div>
+   <div class="row"><span>Hisbah-themed civic encounters</span><span class="badge">Included</span></div>
+   <div class="row"><span>Autosave on device</span><span class="badge">Included</span></div>
+  </div>
+  <div class="panel"><h3>Developer credit</h3><p><b>Umar Abubakar Faruk</b><br><span class="small">Creator & Game Developer • KANO LIFE</span></p></div>
+  <div class="panel"><h3>Reset all progress</h3><p class="small">This erases the saved game on this device and starts a fresh game with ₦2,000,000.</p><button class="btn" onclick="resetConfirm()">Reset game data</button></div>
+ </section>
+</main>
+<nav class="bottom">
+ <button class="active" data-screen="home" onclick="showScreen('home',this)"><span>🏠</span>Home</button>
+ <button data-screen="city" onclick="showScreen('city',this)"><span>🗺️</span>City</button>
+ <button data-screen="life" onclick="showScreen('life',this)"><span>🧍</span>My Life</button>
+ <button data-screen="businesses" onclick="showScreen('businesses',this)"><span>🏪</span>Business</button>
+ <button data-screen="house" onclick="showScreen('house',this)"><span>🏡</span>My Home</button>
+</nav>
+<div class="modalback" id="modalBack"><div class="modal"><h2 id="modalTitle">KANO LIFE</h2><p id="modalText"></p><div id="modalButtons"></div></div></div>
+<script>
+const locations=[
+ {name:"Nassarawa GRA",emoji:"🏘️",desc:"Quiet streets and upscale homes.",cost:1500,activity:"You explored Nassarawa GRA and met people from the neighborhood.",reward:0},
+ {name:"Sabon Gari",emoji:"🛍️",desc:"Busy streets, shops and daily trade.",cost:700,activity:"You visited Sabon Gari, checked out the shops, and found a small opportunity.",reward:5000},
+ {name:"Kurmi Market",emoji:"🧺",desc:"Historic market full of goods and traders.",cost:500,activity:"You explored Kurmi Market and negotiated a good deal.",reward:8000},
+ {name:"Singer",emoji:"🚕",desc:"A lively area with transport and commerce.",cost:800,activity:"You spent time around Singer and heard about a quick delivery job.",reward:6500},
+ {name:"Zoo Road",emoji:"🌆",desc:"Restaurants, hangouts and city life.",cost:1200,activity:"You visited Zoo Road, enjoyed the atmosphere, and made a useful connection.",reward:3000},
+ {name:"Shisha Lounge",emoji:"☕",desc:"A fictional lounge hangout and social spot.",cost:2500,activity:"You stopped at the lounge, socialized, and improved your connections.",reward:0}
+];
+const businesses=[
+ {id:"kiosk",name:"Corner Provision Shop",emoji:"🏪",cost:150000,profit:18000,desc:"A neighborhood shop for daily essentials."},
+ {id:"food",name:"Local Food Stall",emoji:"🍲",cost:220000,profit:28000,desc:"Serve meals to busy residents."},
+ {id:"transport",name:"Keke Transport",emoji:"🛺",cost:450000,profit:48000,desc:"Earn from city trips and deliveries."},
+ {id:"fashion",name:"Clothing & Fabric Shop",emoji:"🧵",cost:350000,profit:36000,desc:"Sell fabrics and everyday clothing."},
+ {id:"generator",name:"Generator Service",emoji:"⚡",cost:300000,profit:32000,desc:"Rent and maintain small generators."},
+ {id:"market",name:"Market Wholesale Stall",emoji:"📦",cost:600000,profit:65000,desc:"Supply goods to smaller traders."}
+];
+const initial=()=>({cash:2000000,energy:100,rep:50,food:5,day:1,location:"Kano City",generator:true,businesses:[],income:0,homeLevel:0,furniture:[],feed:["<b>Day 1:</b> Welcome to KANO LIFE! Your journey starts with ₦2,000,000.","<b>System:</b> Your generator is ready and all core game systems are available."],patrols:0});
+let state;
+try{state=JSON.parse(localStorage.getItem("kanolife_save_v1"))||initial()}catch(e){state=initial()}
+if(typeof state.homeLevel!=="number")state.homeLevel=0;if(!Array.isArray(state.furniture))state.furniture=[];
+function money(n){return "₦"+Math.floor(n).toLocaleString("en-NG")}
+function log(msg){state.feed.unshift(msg);state.feed=state.feed.slice(0,35);renderFeed();saveGame(false)}
+function saveGame(show){try{localStorage.setItem("kanolife_save_v1",JSON.stringify(state));if(show)modal("Saved","Your KANO LIFE progress has been saved on this device.",[{text:"Great",cls:"btn",fn:closeModal}])}catch(e){if(show)modal("Save issue","This browser may be blocking local storage. Try opening the game in Safari or Chrome.",[{text:"OK",cls:"btn",fn:closeModal}])}}
+function showScreen(id,button){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".bottom button").forEach(b=>b.classList.remove("active"));if(button)button.classList.add("active");render()}
+function modal(title,txt,buttons){document.getElementById("modalTitle").textContent=title;document.getElementById("modalText").textContent=txt;const box=document.getElementById("modalButtons");box.innerHTML="";buttons.forEach(b=>{const el=document.createElement("button");el.className=b.cls||"btn";el.textContent=b.text;el.style.marginRight="7px";el.onclick=b.fn;box.appendChild(el)});document.getElementById("modalBack").classList.add("show")}
+function closeModal(){document.getElementById("modalBack").classList.remove("show")}
+function visit(i){const l=locations[i];if(state.energy<8){modal("You're tired","Rest at home to restore energy before exploring.",[{text:"Rest now",cls:"btn",fn:()=>{closeModal();doAction("rest")}},{text:"Later",cls:"btn secondary",fn:closeModal}]);return}if(state.cash<l.cost){modal("Not enough cash","You need "+money(l.cost)+" for this trip.",[{text:"OK",cls:"btn",fn:closeModal}]);return}state.cash-=l.cost;state.energy-=8;state.location=l.name;state.rep=Math.min(100,state.rep+1);let extra="";if(l.reward&&Math.random()>.25){state.cash+=l.reward;extra=" You earned "+money(l.reward)+" from a small opportunity."}state.day+=1;log("<b>"+l.name+":</b> "+l.activity+extra);modal(l.name,l.activity+extra,[{text:"Continue",cls:"btn",fn:closeModal}]);render()}
+function doAction(type){
+ if(type==="rest"){state.energy=Math.min(100,state.energy+45);state.day+=1;log("<b>Home:</b> You rested and recovered energy.");modal("Rested","You recovered energy. Energy is now "+state.energy+"/100.",[{text:"Continue",cls:"btn",fn:closeModal}]);}
+ if(type==="work"){if(state.energy<15){modal("Too tired","Rest first. You need at least 15 energy to work.",[{text:"OK",cls:"btn",fn:closeModal}]);return}let earn=25000+Math.floor(Math.random()*25001);state.cash+=earn;state.energy-=15;state.rep=Math.min(100,state.rep+2);state.day+=1;log("<b>Work:</b> You completed a job and earned "+money(earn)+".");modal("Shift completed","You earned "+money(earn)+". Your energy dropped by 15 and reputation increased.",[{text:"Nice",cls:"btn",fn:closeModal}]);}
+ if(type==="food"){if(state.cash<15000){modal("Not enough cash","You need ₦15,000 to buy food supplies. Try doing a job first.",[{text:"OK",cls:"btn",fn:closeModal}]);return}state.cash-=15000;state.food+=5;state.day+=1;log("<b>Groceries:</b> You bought food supplies for ₦15,000.");modal("Food stocked","You bought groceries. Food supplies: "+state.food+".",[{text:"OK",cls:"btn",fn:closeModal}]);}
+ if(type==="business"){showScreen("businesses",document.querySelector('[data-screen="businesses"]'));return}
+ if(type==="generator"){if(state.generator){modal("Generator ready","Your generator is already owned and ready. Running it for the day costs ₦2,000.",[{text:"Run generator — ₦2,000",cls:"btn",fn:()=>{closeModal();if(state.cash<2000){modal("Not enough cash","You need ₦2,000 to run the generator.",[{text:"OK",cls:"btn",fn:closeModal}]);return}state.cash-=2000;log("<b>Home power:</b> You ran the generator for ₦2,000.");render();}} ,{text:"Cancel",cls:"btn secondary",fn:closeModal}]);}else{modal("No generator","Buy a generator service business to unlock generator ownership.",[{text:"OK",cls:"btn",fn:closeModal}]);}return}
+ if(type==="patrol"){const outcomes=[["Civic encounter","A Hisbah patrol stopped by for a respectful civic check. You cooperated and continued your day.",1],["Community support","You helped a local resident during a community patrol. Your reputation increased.",5],["Routine patrol","A patrol passed through the district. Nothing unusual happened.",0]];let o=outcomes[Math.floor(Math.random()*outcomes.length)];state.rep=Math.max(0,Math.min(100,state.rep+o[2]));state.patrols++;state.day++;log("<b>Hisbah patrol:</b> "+o[1]);modal(o[0],o[1], [{text:"Continue",cls:"btn",fn:closeModal}]);}
+ render();saveGame(false)
+}
+function buyBusiness(id){let b=businesses.find(x=>x.id===id);if(state.businesses.includes(id)){modal("Already owned","You already own "+b.name+".",[{text:"OK",cls:"btn",fn:closeModal}]);return}if(state.cash<b.cost){modal("Not enough cash","You need "+money(b.cost)+" to start "+b.name+". Try working or exploring to earn more.",[{text:"OK",cls:"btn",fn:closeModal}]);return}modal("Start "+b.name+"?",b.desc+" Startup cost: "+money(b.cost)+". Expected income per collection: "+money(b.profit)+".",[ {text:"Buy business",cls:"btn",fn:()=>{closeModal();state.cash-=b.cost;state.businesses.push(id);state.income+=b.profit;state.rep=Math.min(100,state.rep+3);log("<b>Business opened:</b> You started "+b.name+".");render();saveGame(false)}},{text:"Not now",cls:"btn secondary",fn:closeModal}])}
+function collectIncome(){if(!state.businesses.length){modal("No businesses yet","Buy a business first to start earning business income.",[{text:"View businesses",cls:"btn",fn:()=>{closeModal();showScreen("businesses",document.querySelector('[data-screen="businesses"]'))}}]);return}let total=state.businesses.reduce((sum,id)=>sum+businesses.find(b=>b.id===id).profit,0);state.cash+=total;state.day++;log("<b>Business income:</b> You collected "+money(total)+" from your businesses.");modal("Income collected","Your businesses earned "+money(total)+". Cash has been added to your balance.",[{text:"Great",cls:"btn",fn:closeModal}]);render();saveGame(false)}
+function resetConfirm(){modal("Restart KANO LIFE?","This will erase your saved progress on this device and start again with ₦2,000,000.",[{text:"Yes, restart",cls:"btn",fn:()=>{state=initial();saveGame(false);closeModal();render();showScreen("home",document.querySelector('[data-screen="home"]'));modal("Fresh start","Welcome back to KANO LIFE. Your new story starts now.",[{text:"Let's play",cls:"btn",fn:closeModal}])}},{text:"Cancel",cls:"btn secondary",fn:closeModal}])}
+function renderLocations(target){document.getElementById(target).innerHTML=locations.map((l,i)=>`<article class="card location"><div class="emoji">${l.emoji}</div><h4>${l.name}</h4><p>${l.desc}</p><div class="progress">Trip cost: ${money(l.cost)}</div><button class="btn full" onclick="visit(${i})">Visit district</button></article>`).join("")}
+function renderBusinesses(){document.getElementById("businessCards").innerHTML=businesses.map(b=>{let owned=state.businesses.includes(b.id);return `<article class="card location"><div class="emoji">${b.emoji}</div><h4>${b.name}</h4><p>${b.desc}</p><div class="progress">Startup: ${money(b.cost)}</div><div class="progress">Income: ${money(b.profit)}</div><button class="btn full ${owned?"secondary":""}" ${owned?"disabled":""} onclick="buyBusiness('${b.id}')">${owned?"Owned":"Start business"}</button></article>`}).join("");document.getElementById("ownedBusinesses").innerHTML=state.businesses.length?state.businesses.map(id=>{let b=businesses.find(x=>x.id===id);return `<div class="row"><span>${b.emoji} ${b.name}</span><strong>${money(b.profit)} / collection</strong></div>`}).join(""):'<p class="small">No businesses yet. Choose one above to get started.</p>'}
+const homes=[
+ {name:"Small Starter Home",emoji:"🛖",cost:0,desc:"A simple, humble place to begin your story.",condition:"Basic"},
+ {name:"Improved Family House",emoji:"🏠",cost:250000,desc:"More space, stronger finishes, and a more comfortable living area.",condition:"Improved"},
+ {name:"Modern Kano Home",emoji:"🏡",cost:650000,desc:"A modern home with better rooms and a welcoming interior.",condition:"Modern"},
+ {name:"Luxury Villa",emoji:"🏘️",cost:1400000,desc:"A spacious villa for a successful city life.",condition:"Luxury"},
+ {name:"Luxury Mansion",emoji:"🏰",cost:2800000,desc:"Your dream mansion: the top home tier in KANO LIFE.",condition:"Mansion"}
+];
+const furnitureItems=[
+ {id:"bed",name:"Comfortable Bed",emoji:"🛏️",cost:45000,desc:"A better bed for your bedroom."},
+ {id:"sofa",name:"Living Room Sofa",emoji:"🛋️",cost:65000,desc:"A soft sofa for relaxing and hosting guests."},
+ {id:"tv",name:"Flat-Screen TV",emoji:"📺",cost:85000,desc:"Add entertainment to your living room."},
+ {id:"fridge",name:"Refrigerator",emoji:"🧊",cost:110000,desc:"Keep groceries fresh at home."},
+ {id:"decor",name:"Home Decorations",emoji:"🪴",cost:30000,desc:"Plants and decorations to brighten your home."},
+ {id:"security",name:"Home Security Upgrade",emoji:"🔒",cost:95000,desc:"Improve the security of your property."}
+];
+function upgradeHouse(){const next=state.homeLevel+1;if(next>=homes.length){modal("Dream home unlocked!","You already own the Luxury Mansion — the highest home level in this edition.",[{text:"Wonderful",cls:"btn",fn:closeModal}]);return}const h=homes[next];if(state.cash<h.cost){modal("Not enough cash","You need "+money(h.cost)+" to upgrade to "+h.name+". Work or collect business income, then come back.",[{text:"OK",cls:"btn",fn:closeModal}]);return}modal("Upgrade to "+h.name+"?",h.desc+" The upgrade costs "+money(h.cost)+".",[{text:"Upgrade home",cls:"btn",fn:()=>{closeModal();state.cash-=h.cost;state.homeLevel=next;state.rep=Math.min(100,state.rep+4);log("<b>Home upgrade:</b> You upgraded to "+h.name+".");render();saveGame(false);modal("Home upgraded!",h.emoji+" Welcome to your "+h.name+"! Your new home is saved in this browser.",[{text:"Explore my home",cls:"btn",fn:closeModal}])}},{text:"Not now",cls:"btn secondary",fn:closeModal}])}
+function buyFurniture(id){const item=furnitureItems.find(x=>x.id===id);if(state.furniture.includes(id)){modal("Already purchased","You already own: "+item.name+".",[{text:"OK",cls:"btn",fn:closeModal}]);return}if(state.cash<item.cost){modal("Not enough cash","You need "+money(item.cost)+" to buy "+item.name+".",[{text:"OK",cls:"btn",fn:closeModal}]);return}modal("Buy "+item.name+"?",item.desc+" Price: "+money(item.cost)+".",[{text:"Buy furniture",cls:"btn",fn:()=>{closeModal();state.cash-=item.cost;state.furniture.push(id);log("<b>Home furniture:</b> You bought "+item.name+".");render();saveGame(false)}},{text:"Cancel",cls:"btn secondary",fn:closeModal}])}
+function renderHome(){const h=homes[Math.min(Math.max(0,state.homeLevel||0),homes.length-1)];document.getElementById("houseTitle").textContent=h.emoji+" "+h.name;document.getElementById("houseDescription").textContent=h.desc;document.getElementById("houseLevel").textContent="Level "+(state.homeLevel+1)+" / "+homes.length;document.getElementById("houseCondition").textContent=h.condition;document.getElementById("furnitureCount").textContent=state.furniture.length;document.getElementById("houseProgress").innerHTML=homes.map((x,i)=>`<span class="pill">${i<=state.homeLevel?"✓ ":"🔒 "}${x.name}</span>`).join("");const next=homes[state.homeLevel+1];document.getElementById("nextHouseName").textContent=next?"Next: "+next.name:"You own the top home";document.getElementById("nextHouseCost").textContent=next?money(next.cost):"MAX LEVEL";document.getElementById("nextHouseDescription").textContent=next?next.desc:"Congratulations! You have reached the Luxury Mansion.";const btn=document.getElementById("upgradeHouseButton");btn.textContent=next?"Upgrade home — "+money(next.cost):"Luxury Mansion unlocked";btn.disabled=!next;document.getElementById("furnitureCards").innerHTML=furnitureItems.map(x=>{const owned=state.furniture.includes(x.id);return `<article class="card location"><div class="emoji">${x.emoji}</div><h4>${x.name}</h4><p>${x.desc}</p><div class="progress">Price: ${money(x.cost)}</div><button class="btn full ${owned?"secondary":""}" ${owned?"disabled":""} onclick="buyFurniture('${x.id}')">${owned?"Owned":"Buy furniture"}</button></article>`}).join("")}
+function renderFeed(){const html=state.feed.map(x=>`<p>${x}</p>`).join("");let a=document.getElementById("cityFeed");if(a)a.innerHTML=html}
+function render(){document.getElementById("cash").textContent=money(state.cash);document.getElementById("energy").textContent=state.energy+"/100";document.getElementById("rep").textContent=state.rep+"/100";document.getElementById("homeStatus").textContent=state.location;document.getElementById("day").textContent="Day "+state.day;document.getElementById("foodStatus").textContent=state.food>0?state.food+" supplies":"Low";document.getElementById("powerStatus").textContent=state.generator?"Generator ready":"No generator";document.getElementById("businessStatus").textContent=state.businesses.length+" owned";document.getElementById("profileCash").textContent=money(state.cash);document.getElementById("profileEnergy").textContent=state.energy+" / 100";document.getElementById("profileRep").textContent=state.rep+" / 100";document.getElementById("profileFood").textContent=state.food;document.getElementById("profileBiz").textContent=state.businesses.length;document.getElementById("profileGen").textContent=state.generator?"Owned":"Not owned";document.getElementById("energyBar").style.width=state.energy+"%";document.getElementById("repBar").style.width=state.rep+"%";renderLocations("locations");renderLocations("cityLocations");renderBusinesses();renderHome();renderFeed()}
+render();
+</script>
+</body>
+</html>
